@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vidriería Melendes - Gestión de Inventario</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>Vidriería Melendes</h1>
+            <p>Sistema de Gestión de Inventario - PVC y Vidrio</p>
+            <div class="user-controls" style="justify-content: center;">
+                <span class="user-name"><i class="fas fa-user-circle"></i> <span id="display-username">Usuario</span></span>
+                <a href="#" class="logout-link" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="inventory-section">
+            <h2 class="section-title">Inventario de Productos</h2>
+
+            <!-- Dashboard Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-label">Total Productos</span>
+                    <span class="stat-value" id="total-products">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Valor Total</span>
+                    <span class="stat-value" id="total-value">Q0.00</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Productos PVC</span>
+                    <span class="stat-value" id="pvc-count">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Productos Vidrio</span>
+                    <span class="stat-value" id="vidrio-count">0</span>
+                </div>
+            </div>
+
+            <!-- Detailed Statistics Charts -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Distribución por Material</h3>
+                    <canvas id="material-chart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Estado del Inventario</h3>
+                    <canvas id="status-chart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Valor por Categoría</h3>
+                    <canvas id="category-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Controls (Search, Filters, Add) -->
+            <div class="controls-container">
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Buscar productos...">
+                </div>
+
+                <div class="filters-wrapper">
+                    <div class="filter-group">
+                        <label for="material-filter">Tipo de Material</label>
+                        <select id="material-filter">
+                            <option value="Todos">Todos</option>
+                            <option value="PVC">PVC</option>
+                            <option value="Vidrio">Vidrio</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="status-filter">Estado</label>
+                        <select id="status-filter">
+                            <option value="Todos">Todos</option>
+                            <option value="Disponible">Disponible</option>
+                            <option value="Bajo Stock">Bajo Stock</option>
+                            <option value="Agotado">Agotado</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary" id="add-btn">
+                        <i class="fas fa-plus"></i> AGREGAR
+                    </button>
+                </div>
+            </div>
+
+            <!-- Inventory Table -->
+            <div class="table-responsive">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Categoría</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>Ubicación</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-body">
+                        <!-- Data will be populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for adding/editing products -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Agregar Producto</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prod-nombre">Nombre del Producto</label>
+                        <input type="text" id="prod-nombre" required placeholder="Ej: Tubería PVC 1/2">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prod-tipo">Tipo</label>
+                        <select id="prod-tipo" required>
+                            <option value="PVC">PVC</option>
+                            <option value="Vidrio">Vidrio</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-categoria">Categoría</label>
+                        <input type="text" id="prod-categoria" required placeholder="Ej: Accesorios">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prod-cantidad">Cantidad</label>
+                        <input type="number" id="prod-cantidad" required min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-unidad">Unidad</label>
+                        <input type="text" id="prod-unidad" required placeholder="Ej: metros, m², unidades">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prod-precio">Precio (Q)</label>
+                        <input type="number" id="prod-precio" required min="0" step="0.01" value="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-ubicacion">Ubicación</label>
+                        <input type="text" id="prod-ubicacion" required placeholder="Ej: Almacén A-1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prod-estado">Estado</label>
+                        <select id="prod-estado" required>
+                            <option value="Disponible">Disponible</option>
+                            <option value="Bajo Stock">Bajo Stock</option>
+                            <option value="Agotado">Agotado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-btn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Producto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
